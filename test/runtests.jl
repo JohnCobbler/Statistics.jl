@@ -849,6 +849,22 @@ end
     @test issorted(quantile([1.0, 1.0+2eps(), 1.0+4eps(), 1.0+6eps()], range(0, 1, length=100)))
 end
 
+@testset "issue #136: Rational probabilities" begin
+    # A Rational p must not overflow the index arithmetic on large arrays.
+    @test quantile(1.0:20000.0, 1//10) ≈ 2000.9
+    @test quantile(1.0:20000.0, 1//10) == quantile(1.0:20000.0, 0.1)
+    @test quantile(1.0:10000.0, 1//10) ≈ 1000.9
+    @test quantile(1.0:20000.0, 1//4) == quantile(1.0:20000.0, 0.25)
+    # Rational alpha/beta keep the same path and must not overflow either.
+    @test quantile(1.0:20000.0, 1//10; alpha=1//2, beta=1//2) ≈
+          quantile(1.0:20000.0, 0.1; alpha=0.5, beta=0.5)
+    @test quantile(1.0:20000.0, 0//1) == 1.0
+    @test quantile(1.0:20000.0, 1//1) == 20000.0
+    # A Rational result stays exact when the data is rational.
+    @test quantile(Any[1, 2, 4, 10//1], 1//2) === 3//1
+    @test quantile([1//1, 2, 3, 4], 1//4) === 7//4
+end
+
 @testset "quantiles with Date and DateTime" begin
     # this is the historical behavior
     @test quantile([Date(2023, 09, 02)], .1) == Date(2023, 09, 02)

@@ -1053,7 +1053,12 @@ end
 
     @assert n > 0 # this case should never happen here
 
-    m = alpha + p * (one(alpha) - alpha - beta)
+    # For a `Rational` `p`, keep `alpha` and `beta` in `p`'s type so `m` stays a
+    # low-denominator rational. With the float defaults, `oftype(p, m)` would
+    # otherwise rebuild `m` as a rational with denominator 2^53, and adding that
+    # to `n * p` overflows `Int` for large `n` (issue #136).
+    a, b = p isa Rational ? (oftype(p, alpha), oftype(p, beta)) : (alpha, beta)
+    m = a + p * (one(a) - a - b)
     # Using fma here avoids some rounding errors when aleph is an integer
     # The use of oftype supresses the promotion caused by alpha and beta
     aleph = fma(n, p, oftype(p, m))

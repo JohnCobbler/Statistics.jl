@@ -1104,3 +1104,7 @@ end
     @test isequal(cov(Int[], my), fill(-0.0, 1, 3))
     @test isequal(cor(Int[], my), fill(NaN, 1, 3))
 end
+
+# Targeted mutation-coverage tests for var/varm/std/_quantile numerical branches.
+# Kills surviving boolean-flip, comparison-operator, and index-path mutants.
+include("test_var_std_quantile_mutants.jl")

@@ -472,6 +472,22 @@ end
     @test quantile(v, 0.5; alpha=1.0, beta=1.0) ≈ 3.0
 end
 
+@testset "_quantile: j/γ lower clamp under type-4 (alpha=beta=0, small p)" begin
+    v = [10.0, 20.0, 30.0, 40.0, 50.0]
+
+    # With alpha=beta=0 and small p the interpolation index aleph drops below 1.
+    # The lower clamps — j = clamp(trunc(Int, aleph), 1, n-1) and
+    # γ = clamp(aleph - j, 0, 1) — must pin to the first element:
+    #   j-bound 1→0 would index v[0] (BoundsError);
+    #   γ-bound 0→-1 would extrapolate below v[1].
+    @test quantile(v, 0.0;  alpha=0.0, beta=0.0) == 10.0
+    @test quantile(v, 0.05; alpha=0.0, beta=0.0) == 10.0
+    @test quantile(v, 0.1;  alpha=0.0, beta=0.0) == 10.0
+    @test quantile(v, 0.5;  alpha=0.5, beta=0.5) == 30.0  # aleph=0.5 path, j/γ clamped
+    # result never falls below the minimum element
+    @test quantile(v, 0.0; alpha=0.0, beta=0.0) >= minimum(v)
+end
+
 @testset "varm/var range: default corrected flag is true" begin
     r = 1:10
     m = mean(r)

@@ -455,3 +455,32 @@ end
     # vector form validates each p
     @test_throws ArgumentError quantile(v, [0.5, 1.5])
 end
+
+@testset "quantile non-default alpha/beta parametrization" begin
+    v = [1.0, 2.0, 3.0, 4.0, 5.0]
+
+    # alpha=beta=0.5 (Hazen / type-5). With these params the interpolation
+    # offset m = alpha + p*(1-alpha-beta) has a nonzero (1-alpha-beta) factor,
+    # so the p*(...) term must be a multiplication: a *→/ mutant produces Inf.
+    @test quantile(v, 0.4; alpha=0.5, beta=0.5) ≈ 2.5
+    @test quantile(v, 0.5; alpha=0.5, beta=0.5) ≈ 3.0
+    @test isfinite(quantile(v, 0.4; alpha=0.4, beta=0.4))
+    @test quantile(v, 0.4; alpha=0.4, beta=0.4) ≈ 2.48
+
+    # alpha=beta=0 (type-4) and alpha=beta=1 (type-7, default) bracket the family
+    @test quantile(v, 0.5; alpha=0.0, beta=0.0) ≈ 3.0
+    @test quantile(v, 0.5; alpha=1.0, beta=1.0) ≈ 3.0
+end
+
+@testset "varm/var range: default corrected flag is true" begin
+    r = 1:10
+    m = mean(r)
+
+    # Bare calls (no explicit corrected=) must use the unbiased n-1 denominator.
+    # A flipped default would return the biased value instead.
+    @test varm(r, m)           ≈ varm(r, m; corrected=true)
+    @test varm(r, m)           ≈ 9.166666666666668
+    @test varm(r, m)           != varm(r, m; corrected=false)
+    @test var(r)               ≈ var(r; corrected=true)
+    @test var(r)               != var(r; corrected=false)
+end

@@ -429,3 +429,29 @@ end
     @test isinf(std(v))
     @test !isnan(std(v))
 end
+
+@testset "quantile input-validation guards: p/alpha/beta range checks" begin
+    v = [1.0, 2.0, 3.0, 4.0]
+
+    # p outside [0,1] throws (guards both endpoints)
+    @test_throws ArgumentError quantile(v, -0.001)
+    @test_throws ArgumentError quantile(v, 1.001)
+    @test_throws ArgumentError quantile(v, -1.0)
+    @test_throws ArgumentError quantile(v, 2.0)
+    # boundary values are accepted (guard is inclusive)
+    @test quantile(v, 0.0) == 1.0
+    @test quantile(v, 1.0) == 4.0
+
+    # alpha outside [0,1] throws
+    @test_throws ArgumentError quantile(v, 0.5; alpha=-0.1)
+    @test_throws ArgumentError quantile(v, 0.5; alpha=1.1)
+    # beta outside [0,1] throws
+    @test_throws ArgumentError quantile(v, 0.5; beta=-0.1)
+    @test_throws ArgumentError quantile(v, 0.5; beta=1.1)
+    # inclusive boundaries accepted for alpha/beta
+    @test quantile(v, 0.5; alpha=0.0, beta=0.0) isa Float64
+    @test quantile(v, 0.5; alpha=1.0, beta=1.0) isa Float64
+
+    # vector form validates each p
+    @test_throws ArgumentError quantile(v, [0.5, 1.5])
+end

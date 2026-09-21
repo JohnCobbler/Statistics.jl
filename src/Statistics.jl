@@ -1027,9 +1027,9 @@ function _quantilesort!(v::AbstractVector, sorted::Bool, minp::Real, maxp::Real)
     isempty(v) && throw(ArgumentError("empty data vector"))
     require_one_based_indexing(v)
     length(v) == 0 && throw(ArgumentError(
-        "data vector reports length 0 but is not empty; this can happen for an " *
-        "integer range whose length overflows (e.g. `typemin(Int):typemax(Int)`) — " *
-        "collect it to a concrete vector first"))
+        "data vector reports length 0 but is not empty; its length does not fit in Int " *
+        "(for example typemin(Int):typemax(Int)). " *
+        "Pass a collection whose length fits in Int"))
 
     if !sorted
         lv = length(v)

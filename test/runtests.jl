@@ -715,13 +715,23 @@ end
     @test quantile([1], 0.5) === 1.0
 
     # A range whose length overflows reports length 0 while being non-empty,
-    # which slips past the isempty guard. Such input gets a clear ArgumentError
-    # instead of an internal AssertionError (issue #121).
+    # so it passes the isempty guard. quantile throws ArgumentError and does
+    # not ask the caller to materialize that range.
     let r = typemin(Int):typemax(Int)
         @test length(r) == 0
         @test !isempty(r)
-        @test_throws ArgumentError quantile!([0], r, [1])
-        @test_throws ArgumentError quantile(r, 0.5; sorted=true)
+        msg(f) = try
+            f()
+            ""
+        catch e
+            e isa ArgumentError ? e.msg : sprint(showerror, e)
+        end
+        for m in (msg(() -> quantile!([0], r, [1])),
+                  msg(() -> quantile(r, 0.5; sorted=true)))
+            @test occursin("does not fit in Int", m)
+            @test !occursin("collect it", m)
+            @test !occursin("concrete vector", m)
+        end
     end
     @test_throws ArgumentError quantile(Int[], 0.5)
 

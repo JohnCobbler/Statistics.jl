@@ -1024,12 +1024,8 @@ quantile!(v::AbstractVector, p::Real; sorted::Bool=false, alpha::Real=1.0, beta:
 
 # Function to perform partial sort of v for quantiles in given range
 function _quantilesort!(v::AbstractVector, sorted::Bool, minp::Real, maxp::Real)
-    isempty(v) && throw(ArgumentError("empty data vector"))
+    length(v) == 0 && throw(ArgumentError("empty data vector"))
     require_one_based_indexing(v)
-    length(v) == 0 && throw(ArgumentError(
-        "data vector reports length 0 but is not empty; its length does not fit in Int " *
-        "(for example typemin(Int):typemax(Int)). " *
-        "Pass a collection whose length fits in Int"))
 
     if !sorted
         lv = length(v)
